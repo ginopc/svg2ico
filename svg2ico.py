@@ -27,11 +27,12 @@ __version__ = "0.1"
 import os
 import sys
 import subprocess
+import P
 
 # check comandline parameters
 #
 # 
-# Syntax: svg2ico.py filename [-w WIDTH] [-h HEIGHT]
+# Syntax: svg2ico.py filename
 if len(sys.argv)!=2:
 	sys.exit("Usage\tInput PNG file\n")
 
@@ -43,18 +44,34 @@ fileList=[]
 #
 class Svg2Ico:
 	
-	width=16
-	heigth=16
-	oFileName='icon.ico'
+	width = 16
+	heigth = 16
+	iFileName = ''
 	
-	def _init(width, height):
-	   self.width=width
-	   self.heigth=height
+	def __init__(self, width, height, fName):
+	   self.width = width
+	   self.heigth = height
+	   self.iFileName = fName
 	   
-	def saveToFilename(fileName):
-	   self.fileName=fileName
-		return 'hello world'
+	def createPPM(pnfFileName, isAlphaChannel):
+		return 0
+		
+	def resizeImage(self, iFile, oFile, width):
+	   return 0
+	   
+	   
+	def convertToIco(self, iFile):
+		return 0
+	   
+	def saveToFilename(self, fName):
+		from PIL import Image
+		filename = r'logo.png'
+		img = Image.open(filename)
+		img.save('log.ico')
+		return true
+	   
 		
 if __name__ == '__main__':   #pragma: no cover
-    e = svg2ico()
-    e.affect()
+    e = Svg2Ico(16, 16, "image.png")
+    e.saveToFilename("out.ico")
+    # e.affect()
