@@ -38,13 +38,16 @@ if len(sys.argv)!=2:
 oFileName=sys.argv[1]
 fileList=[]
 
+#
+# Sgv2Ico Main Class
+#
 class Svg2Ico:
-	"""A simple class"""
+	
 	width=16
 	heigth=16
-	fileName='icon.ico'
+	oFileName='icon.ico'
 	
-	def _init(self, width, height):
+	def _init(width, height):
 	   self.width=width
 	   self.heigth=height
 	   
