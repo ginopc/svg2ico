@@ -4,7 +4,7 @@ Inkscape extension to save image to WinIco file.
 
 ## How to install
 
-Copy all files under Inkscape extesions folder.
+Estract files from archive and copy them under Inkscape extesions folder.
 
 ## About
 
