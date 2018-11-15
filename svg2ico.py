@@ -4,7 +4,7 @@
 # svg2ico.py
 # Create Win ico files easily.
 #
-# Copyright (C) 2008 M. Aru <ginopc(a)tiscali.it>
+# Copyright (C) 2008 Maurizio Aru <ginopc(a)tiscali.it>
 # 
 # Based on icon_generator code extesion by David R. Damerell (david@nixbioinf.org)
 # 
