@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
-  <_name>SVG to ICO</_name>
-  <id>org.inkscape.output.svg2ico</id>
-  <dependency type="executable" location="extensions">svg2ico.py</dependency>
-  <param name="tab" type="notebook">
-	<page name="size">
-		<param name="heigth" type="int" min="0" max="72" _gui-text="Height:">16</param>
-		<param name="width" type="int" min="0" max="72" _gui-text="Width:">16</param>
-	</page>
-  </param>
-  <output>
-	<extension>.ico</extension>
-	<mimetype>image/ico</mimetype>
-	<_filetypename>Win Icon File (*.ico)</_filetypename>
-	<_filetypetooltip>Icon file on Win format</_filetypetooltip>
-  </output>
-  <script>
-    <command reldir="extensions" interpreter="python">svg2ico.py</command>
-  </script>
+    <_name>SVG to ICO</_name>
+    <id>org.inkscape.output.svg2ico</id>
+    <dependency type="executable" location="extensions">svg2ico.py</dependency>
+    <param name="s" type="optiongroup" _gui-text="Select Size:">
+        <option value="16">16x16</option>
+        <option value="32">32x32</option>
+        <option value="48">48x48</option>
+    </param>
+    <param name="o" type="string" _gui-text="To File:">file.ico</param>
+    <output>
+        <extension>.ico</extension>
+        <mimetype>image/ico</mimetype>
+        <_filetypename>Win Icon File (*.ico)</_filetypename>
+        <_filetypetooltip>Icon file on Win format</_filetypetooltip>
+    </output>
+    <script>
+        <command reldir="extensions" interpreter="python">svg2ico.py</command>
+    </script>
 </inkscape-extension>

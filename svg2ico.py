@@ -22,22 +22,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-__version__ = "0.1"
+__version__ = "0.2"
 
 import os
 import sys
 import subprocess
-import P
-
-# check comandline parameters
-#
-# 
-# Syntax: svg2ico.py filename
-if len(sys.argv)!=2:
-	sys.exit("Usage\tInput PNG file\n")
-
-oFileName=sys.argv[1]
-fileList=[]
+import argparse
 
 #
 # Sgv2Ico Main Class
@@ -46,12 +36,13 @@ class Svg2Ico:
 	
 	width = 16
 	heigth = 16
-	iFileName = ''
+	ifName = 'in.png'
+	ofName = 'out.ico'
 	
-	def __init__(self, width, height, fName):
-	   self.width = width
-	   self.heigth = height
-	   self.iFileName = fName
+	def __init__(self, size, iName):
+		self.width = size
+		self.heigth = size
+		self.ifName = iName
 	   
 	def createPPM(pnfFileName, isAlphaChannel):
 		return 0
@@ -59,19 +50,31 @@ class Svg2Ico:
 	def resizeImage(self, iFile, oFile, width):
 	   return 0
 	   
-	   
 	def convertToIco(self, iFile):
 		return 0
 	   
 	def saveToFilename(self, fName):
+		self.ofName = fName
+		print("[DEBUG] Width: %d, Heigth: %d" % (self.width, self.heigth))
+		print("[DEBUG] iFile: %s, oFile: %s" % (self.ifName, self.ofName))
 		from PIL import Image
-		filename = r'logo.png'
-		img = Image.open(filename)
-		img.save('log.ico')
-		return true
-	   
+		img = Image.open(self.ifName)
+		img.save(fName)
+
+#
+# Check command line parameters
+# 
+def parseOptions():
+	parser = argparse.ArgumentParser(description='Convert svg to ico')
+	parser.add_argument('--s', type=int, default=16, help='Icon Size')
+	parser.add_argument('--o', default="file.ico", help='Output FileName')
+	parser.add_argument('iFile', default="file.png", help='Input FileName')
+	args = parser.parse_args()
+	return args
+
 		
 if __name__ == '__main__':   #pragma: no cover
-    e = Svg2Ico(16, 16, "image.png")
-    e.saveToFilename("out.ico")
-    # e.affect()
+	args = parseOptions()
+	e = Svg2Ico(args.s, args.iFile)
+	e.saveToFilename(args.o)
+
