@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # svg2ico.py
@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-__version__ = "0.2"
+__version__ = "0.3"
 
 import os
 import sys
@@ -34,47 +34,46 @@ import argparse
 #
 class Svg2Ico:
 	
-	width = 16
-	heigth = 16
-	ifName = 'in.png'
-	ofName = 'out.ico'
+	sizes = []
 	
-	def __init__(self, size, iName):
-		self.width = size
-		self.heigth = size
-		self.ifName = iName
+	def __init__(self, sizes):
+		self.sizes = sizes
 	   
-	def createPPM(pnfFileName, isAlphaChannel):
-		return 0
-		
-	def resizeImage(self, iFile, oFile, width):
-	   return 0
-	   
-	def convertToIco(self, iFile):
-		return 0
-	   
-	def saveToFilename(self, fName):
-		self.ofName = fName
-		print("[DEBUG] Width: %d, Heigth: %d" % (self.width, self.heigth))
-		print("[DEBUG] iFile: %s, oFile: %s" % (self.ifName, self.ofName))
+	def convert_stream(self, input_stream, output_stream):
 		from PIL import Image
-		img = Image.open(self.ifName)
-		img.save(fName)
+		import io
+
+		try:
+			import cairosvg
+		except ImportError:
+			sys.stderr.write(f"Error: The 'cairosvg' Python Module could not be found.\nThe running Python Interpreter is: {sys.executable}")
+			sys.exit(1)
+
+
+		# Read the SVG data from stdin
+		svg_data = input_stream.read()
+		
+		# Convert SVG to PNG
+		png_data = io.BytesIO(cairosvg.svg2png(bytestring=svg_data, output_width=1024, output_height=1024))
+
+		input_svg = Image.open(png_data)
+
+		input_svg.save(output_stream, 'ico', sizes=self.sizes)
+
 
 #
 # Check command line parameters
 # 
-def parseOptions():
-	parser = argparse.ArgumentParser(description='Convert svg to ico')
-	parser.add_argument('--s', type=int, default=16, help='Icon Size')
-	parser.add_argument('--o', default="file.ico", help='Output FileName')
-	parser.add_argument('iFile', default="file.png", help='Input FileName')
+def parse_options():
+	parser = argparse.ArgumentParser(description='Convert SVG to ICO')
+	parser.add_argument('filename', nargs='?', default=None, help='Input SVG filename (optional)')
+	parser.add_argument('--s', type=lambda s: [(int(item),int(item)) for item in s.split(',')], default="16,32,64,128,256,512", help='Icon Sizes')
 	args = parser.parse_args()
 	return args
 
 		
 if __name__ == '__main__':   #pragma: no cover
-	args = parseOptions()
-	e = Svg2Ico(args.s, args.iFile)
-	e.saveToFilename(args.o)
+	args = parse_options()
+	e = Svg2Ico(args.s)
+	e.convert_stream(sys.stdin.buffer, sys.stdout.buffer)
 
