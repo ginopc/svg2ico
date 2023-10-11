@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
     <_name>SVG to ICO</_name>
-    <id>org.inkscape.output.svg2ico</id>
-    <dependency type="executable" location="extensions">svg2ico.py</dependency>
+    <id>org.inkscape.raster.ico_output</id>
 
     <label>Export as Win Icon File</label>
     <param name="s" type="optiongroup" _gui-text="Select Size:">
@@ -10,7 +9,7 @@
         <option value="32">32x32</option>
         <option value="48">48x48</option>
     </param>
-    <output>
+    <output raster="true">
         <extension>.ico</extension>
         <mimetype>image/ico</mimetype>
         <savecopyonly>true</savecopyonly>

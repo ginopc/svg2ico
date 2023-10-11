@@ -28,52 +28,68 @@ import os
 import sys
 import subprocess
 import argparse
+import inkex
+import io
+from PIL import Image
+from PIL import ImageOps
 
-#
-# Sgv2Ico Main Class
-#
-class Svg2Ico:
-	
-	sizes = []
-	
-	def __init__(self, sizes):
-		self.sizes = sizes
-	   
-	def convert_stream(self, input_stream, output_stream):
-		from PIL import Image
-		import io
+class IcoOutput(inkex.RasterOutputExtension):
+	def add_arguments(self, pars):
+		pars.add_argument("--sizes", type=str, default="16,32,64")
 
-		try:
-			import cairosvg
-		except ImportError:
-			sys.stderr.write(f"Error: The 'cairosvg' Python Module could not be found.\nThe running Python Interpreter is: {sys.executable}")
-			sys.exit(1)
+	def save(self, stream):
+		# Get the specified sizes as a comma-separated string and convert to a list of integers
+		sizes_str = self.options.sizes
+		sizes = [int(size.strip()) for size in sizes_str.split(',')]
 
+		# Initialize a list to store the resized PNG images
+		png_images = []
 
-		# Read the SVG data from stdin
-		svg_data = input_stream.read()
-		
-		# Convert SVG to PNG
-		png_data = io.BytesIO(cairosvg.svg2png(bytestring=svg_data, output_width=1024, output_height=1024))
+		# Open a file for writing
+		with open("/Users/watkinsp/source/repos/svg2ico/introspection_output.txt", "w") as output_file:
+			# Redirect the output to the file using the file parameter
+			print(dir(self.img), file=output_file)
 
-		input_svg = Image.open(png_data)
+		# Render the SVG for each size and resize the images
+		for size in sizes:
+			image = io.BytesIO()
+			self.img.convert("RGBA").save(
+				image,
+				format="png"
+			)
 
-		input_svg.save(output_stream, 'ico', sizes=self.sizes)
+			# Append the resized image to the list
+			png_images.append(image)
 
+		# Determine the number of images based on the sizes
+		num_images = len(sizes)
 
-#
-# Check command line parameters
-# 
-def parse_options():
-	parser = argparse.ArgumentParser(description='Convert SVG to ICO')
-	parser.add_argument('filename', nargs='?', default=None, help='Input SVG filename (optional)')
-	parser.add_argument('--s', type=lambda s: [(int(item),int(item)) for item in s.split(',')], default="16,32,64,128,256,512", help='Icon Sizes')
-	args = parser.parse_args()
-	return args
+		# Create an ICO file with all the images
+		with io.BytesIO() as ico_file:
+			ico_file.write(b'\x00\x00\x01\x00')  # ICO header (ICO file type)
+			ico_file.write(int.to_bytes(num_images, 2, 'little'))  # Number of images
 
-		
-if __name__ == '__main__':   #pragma: no cover
-	args = parse_options()
-	e = Svg2Ico(args.s)
-	e.convert_stream(sys.stdin.buffer, sys.stdout.buffer)
+			# Image directory entries for each size
+			offset = 6 + (16 * num_images)  # Offset to the image data
+			for i, size in enumerate(sizes):
+				png_data_size = png_images[i].getbuffer().nbytes
+				ico_file.write(bytes([size]))  # Width
+				ico_file.write(bytes([size]))  # Height
+				ico_file.write(bytes([0]))  # Color count (0 = no palette)
+				ico_file.write(bytes([0]))  # Reserved (0)
+				ico_file.write(int.to_bytes(1, 2, 'little'))  # Color planes (1)
+				ico_file.write(int.to_bytes(32, 2, 'little'))  # Bits per pixel (32-bit RGBA)
+				ico_file.write(int.to_bytes(png_data_size, 4, 'little'))  # Image size
+				ico_file.write(int.to_bytes(offset, 4, 'little'))  # Offset to image data
+				offset += png_data_size
+
+			# Image data for each size
+			for image in png_images:
+				ico_file.write(image.getvalue())
+
+			# Save the ICO data to the standard output (STDOUT)
+			stream.write(ico_file.getvalue())
+
+if __name__ == "__main__":
+	IcoOutput().run()
 
