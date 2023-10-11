@@ -4,7 +4,9 @@
 # svg2ico.py
 # Create Win ico files easily.
 #
-# Copyright (C) 2008 Maurizio Aru <ginopc(a)tiscali.it>
+# Copyright (C) 2023 Peter Watkins <watkipet@gmail.com>
+#    Based on svg2ico
+#    Copyright (C) 2008 Maurizio Aru <ginopc(a)tiscali.it>
 # 
 # Based on icon_generator code extesion by David R. Damerell (david@nixbioinf.org)
 # 
@@ -22,73 +24,44 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-__version__ = "0.3"
+__version__ = "1.0.0"
 
-import os
-import sys
-import subprocess
-import argparse
 import inkex
 import io
-from PIL import Image
-from PIL import ImageOps
 
 class IcoOutput(inkex.RasterOutputExtension):
 	def add_arguments(self, pars):
-		pars.add_argument("--sizes", type=str, default="16,32,64")
+		pars.add_argument("--tab")
+		pars.add_argument("--size16", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size24", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size32", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size48", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size64", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size128", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size256", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--format", type=str, default="png")
 
 	def save(self, stream):
-		# Get the specified sizes as a comma-separated string and convert to a list of integers
-		sizes_str = self.options.sizes
-		sizes = [int(size.strip()) for size in sizes_str.split(',')]
+		sizes = []
+		if self.options.size16: sizes.append((16,16))
+		if self.options.size24: sizes.append((24,24))
+		if self.options.size32: sizes.append((32,32))
+		if self.options.size48: sizes.append((48,48))
+		if self.options.size64: sizes.append((64,64))
+		if self.options.size128: sizes.append((128,128))
+		if self.options.size256: sizes.append((256,256))
 
-		# Initialize a list to store the resized PNG images
-		png_images = []
+		# Convert to ICO format using Pillow
+		ico_image_data = io.BytesIO()
+		self.img.convert("RGBA").save(
+			ico_image_data,
+			format="ico",
+			sizes=sizes,
+			bitmap_format=self.options.format.lower()
+		)
 
-		# Open a file for writing
-		with open("/Users/watkinsp/source/repos/svg2ico/introspection_output.txt", "w") as output_file:
-			# Redirect the output to the file using the file parameter
-			print(dir(self.img), file=output_file)
-
-		# Render the SVG for each size and resize the images
-		for size in sizes:
-			image = io.BytesIO()
-			self.img.convert("RGBA").save(
-				image,
-				format="png"
-			)
-
-			# Append the resized image to the list
-			png_images.append(image)
-
-		# Determine the number of images based on the sizes
-		num_images = len(sizes)
-
-		# Create an ICO file with all the images
-		with io.BytesIO() as ico_file:
-			ico_file.write(b'\x00\x00\x01\x00')  # ICO header (ICO file type)
-			ico_file.write(int.to_bytes(num_images, 2, 'little'))  # Number of images
-
-			# Image directory entries for each size
-			offset = 6 + (16 * num_images)  # Offset to the image data
-			for i, size in enumerate(sizes):
-				png_data_size = png_images[i].getbuffer().nbytes
-				ico_file.write(bytes([size]))  # Width
-				ico_file.write(bytes([size]))  # Height
-				ico_file.write(bytes([0]))  # Color count (0 = no palette)
-				ico_file.write(bytes([0]))  # Reserved (0)
-				ico_file.write(int.to_bytes(1, 2, 'little'))  # Color planes (1)
-				ico_file.write(int.to_bytes(32, 2, 'little'))  # Bits per pixel (32-bit RGBA)
-				ico_file.write(int.to_bytes(png_data_size, 4, 'little'))  # Image size
-				ico_file.write(int.to_bytes(offset, 4, 'little'))  # Offset to image data
-				offset += png_data_size
-
-			# Image data for each size
-			for image in png_images:
-				ico_file.write(image.getvalue())
-
-			# Save the ICO data to the standard output (STDOUT)
-			stream.write(ico_file.getvalue())
+		# Save the ICO data to the standard output (STDOUT)
+		stream.write(ico_image_data.getvalue())
 
 if __name__ == "__main__":
 	IcoOutput().run()
