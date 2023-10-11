@@ -1,10 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # svg2ico.py
 # Create Win ico files easily.
 #
-# Copyright (C) 2008 Maurizio Aru <ginopc(a)tiscali.it>
+# Copyright (C) 2023 Peter Watkins <watkipet@gmail.com>
+#    Based on svg2ico
+#    Copyright (C) 2008 Maurizio Aru <ginopc(a)tiscali.it>
 # 
 # Based on icon_generator code extesion by David R. Damerell (david@nixbioinf.org)
 # 
@@ -22,59 +24,45 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-__version__ = "0.2"
+__version__ = "1.0.0"
 
-import os
-import sys
-import subprocess
-import argparse
+import inkex
+import io
 
-#
-# Sgv2Ico Main Class
-#
-class Svg2Ico:
-	
-	width = 16
-	heigth = 16
-	ifName = 'in.png'
-	ofName = 'out.ico'
-	
-	def __init__(self, size, iName):
-		self.width = size
-		self.heigth = size
-		self.ifName = iName
-	   
-	def createPPM(pnfFileName, isAlphaChannel):
-		return 0
-		
-	def resizeImage(self, iFile, oFile, width):
-	   return 0
-	   
-	def convertToIco(self, iFile):
-		return 0
-	   
-	def saveToFilename(self, fName):
-		self.ofName = fName
-		print("[DEBUG] Width: %d, Heigth: %d" % (self.width, self.heigth))
-		print("[DEBUG] iFile: %s, oFile: %s" % (self.ifName, self.ofName))
-		from PIL import Image
-		img = Image.open(self.ifName)
-		img.save(fName)
+class IcoOutput(inkex.RasterOutputExtension):
+	def add_arguments(self, pars):
+		pars.add_argument("--tab")
+		pars.add_argument("--size16", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size24", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size32", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size48", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size64", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size128", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--size256", type=lambda s: s.lower()=="true", default=True)
+		pars.add_argument("--format", type=str, default="png")
 
-#
-# Check command line parameters
-# 
-def parseOptions():
-	parser = argparse.ArgumentParser(description='Convert svg to ico')
-	parser.add_argument('--s', type=int, default=16, help='Icon Size')
-	parser.add_argument('--o', default="file.ico", help='Output FileName')
-	parser.add_argument('iFile', default="file.png", help='Input FileName')
-	args = parser.parse_args()
-	return args
+	def save(self, stream):
+		sizes = []
+		if self.options.size16: sizes.append((16,16))
+		if self.options.size24: sizes.append((24,24))
+		if self.options.size32: sizes.append((32,32))
+		if self.options.size48: sizes.append((48,48))
+		if self.options.size64: sizes.append((64,64))
+		if self.options.size128: sizes.append((128,128))
+		if self.options.size256: sizes.append((256,256))
 
-		
-if __name__ == '__main__':   #pragma: no cover
-	args = parseOptions()
-	e = Svg2Ico(args.s, args.iFile)
-	e.saveToFilename(args.o)
+		# Convert to ICO format using Pillow
+		ico_image_data = io.BytesIO()
+		self.img.convert("RGBA").save(
+			ico_image_data,
+			format="ico",
+			sizes=sizes,
+			bitmap_format=self.options.format.lower()
+		)
+
+		# Save the ICO data to the standard output (STDOUT)
+		stream.write(ico_image_data.getvalue())
+
+if __name__ == "__main__":
+	IcoOutput().run()
 

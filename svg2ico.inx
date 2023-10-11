@@ -1,21 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
     <_name>SVG to ICO</_name>
-    <id>org.inkscape.output.svg2ico</id>
-    <dependency type="executable" location="extensions">svg2ico.py</dependency>
-    <param name="s" type="optiongroup" _gui-text="Select Size:">
-        <option value="16">16x16</option>
-        <option value="32">32x32</option>
-        <option value="48">48x48</option>
+    <id>org.inkscape.raster.ico_output</id>
+
+    <label>Export as Win Icon File</label>
+    <param name="tab" type="notebook">
+        <page name="format" gui-text="Format">
+            <param name="format" type="optiongroup" _gui-text="Format:">
+                <option value="png">PNG</option>
+                <option value="bmp">BMP</option>
+            </param>
+        </page>
+        <page name="sizes" gui-text="Sizes">
+            <param name="size16" type="bool" gui-text="16x16">true</param>
+            <param name="size24" type="bool" gui-text="24x24">true</param>
+            <param name="size32" type="bool" gui-text="32x32">true</param>
+            <param name="size48" type="bool" gui-text="48x48">true</param>
+            <param name="size64" type="bool" gui-text="64x64">true</param>
+            <param name="size128" type="bool" gui-text="128x128">true</param>
+            <param name="size256" type="bool" gui-text="256x256">true</param>
+        </page>
     </param>
-    <param name="o" type="string" _gui-text="To File:">file.ico</param>
-    <output>
+    <output raster="true">
         <extension>.ico</extension>
         <mimetype>image/ico</mimetype>
+        <savecopyonly>true</savecopyonly>
         <_filetypename>Win Icon File (*.ico)</_filetypename>
         <_filetypetooltip>Icon file on Win format</_filetypetooltip>
     </output>
     <script>
-        <command reldir="extensions" interpreter="python">svg2ico.py</command>
+        <command location="inx" interpreter="python">svg2ico.py</command>
     </script>
 </inkscape-extension>
