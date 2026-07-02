@@ -1,0 +1,53 @@
+{
+  "extension_name": "SVG to ICO",
+  "extension_id": "org.inkscape.output.svg2ico",
+  "version": "1.0",
+  "authors": [
+    {
+      "name": "Maurizio Aru",
+      "email": "ginopc@tiscali.it",
+      "url": "https://github.com/ginopc"
+    }
+  ],
+  "description": {
+    "en": "Inkscape extension to export SVG documents as Windows ICO files. Supports multiple sizes (16x16, 32x32, 48x48) with automatic conversion from vector to raster format.",
+    "it": "Estensione Inkscape per esportare documenti SVG come file ICO di Windows. Supporta multiple dimensioni (16x16, 32x32, 48x48) con conversione automatica da vettoriale a raster."
+  },
+  "license": "GPL-2.0-or-later",
+  "link": {
+    "documentation": "https://github.com/ginopc/svg2ico/blob/main/README.md",
+    "repository": "https://github.com/ginopc/svg2ico"
+  },
+  "tags": [
+    "export",
+    "convert",
+    "icon",
+    "ico",
+    "windows"
+  ],
+  "inkscape_version": "1.0",
+  "depends": [
+    {
+      "name": "python",
+      "version": ">=3.6",
+      "optional": false
+    },
+    {
+      "name": "Pillow",
+      "version": ">=8.0",
+      "optional": false
+    }
+  ],
+  "releases": [
+    {
+      "version": "1.0",
+      "date": "2024-01-01",
+      "notes": "Added support for Inkscape 1.0+, improved PNG to ICO conversion, better error handling"
+    },
+    {
+      "version": "0.2",
+      "date": "2008-01-01",
+      "notes": "Initial release"
+    }
+  ]
+}
