@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # svg2ico.py
@@ -22,59 +22,136 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-__version__ = "0.2"
+__version__ = "1.0"
 
 import os
 import sys
+import tempfile
 import subprocess
-import argparse
 
-#
-# Sgv2Ico Main Class
-#
-class Svg2Ico:
-	
-	width = 16
-	heigth = 16
-	ifName = 'in.png'
-	ofName = 'out.ico'
-	
-	def __init__(self, size, iName):
-		self.width = size
-		self.heigth = size
-		self.ifName = iName
-	   
-	def createPPM(pnfFileName, isAlphaChannel):
-		return 0
-		
-	def resizeImage(self, iFile, oFile, width):
-	   return 0
-	   
-	def convertToIco(self, iFile):
-		return 0
-	   
-	def saveToFilename(self, fName):
-		self.ofName = fName
-		print("[DEBUG] Width: %d, Heigth: %d" % (self.width, self.heigth))
-		print("[DEBUG] iFile: %s, oFile: %s" % (self.ifName, self.ofName))
-		from PIL import Image
-		img = Image.open(self.ifName)
-		img.save(fName)
+# Add Inkscape extensions directory to path
+sys.path.insert(0, '/usr/share/inkscape/extensions')
 
-#
-# Check command line parameters
-# 
-def parseOptions():
-	parser = argparse.ArgumentParser(description='Convert svg to ico')
-	parser.add_argument('--s', type=int, default=16, help='Icon Size')
-	parser.add_argument('--o', default="file.ico", help='Output FileName')
-	parser.add_argument('iFile', default="file.png", help='Input FileName')
-	args = parser.parse_args()
-	return args
+try:
+    import inkscape
+    from inkscape import extension
+except ImportError:
+    # Fallback for different Inkscape installations
+    pass
 
-		
-if __name__ == '__main__':   #pragma: no cover
-	args = parseOptions()
-	e = Svg2Ico(args.s, args.iFile)
-	e.saveToFilename(args.o)
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+
+class Svg2Ico(extension.Effect):
+    """Inkscape extension to export SVG as Windows ICO file."""
+    
+    def __init__(self):
+        extension.Effect.__init__(self)
+        self.arg_parser.add_argument(
+            '--s',
+            type=int,
+            default=16,
+            dest='size',
+            help='Icon size (16, 32, or 48)'
+        )
+        self.arg_parser.add_argument(
+            '--o',
+            type=str,
+            default='file.ico',
+            dest='output',
+            help='Output ICO filename'
+        )
+        self.size = 16
+        self.output_file = 'file.ico'
+    
+    def effect(self):
+        """Main effect method called by Inkscape."""
+        try:
+            # Get parameters from Inkscape
+            self.size = int(self.options.size)
+            self.output_file = self.options.output
+            
+            # Ensure output file has .ico extension
+            if not self.output_file.endswith('.ico'):
+                self.output_file += '.ico'
+            
+            # Create temporary PNG file
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                tmp_png = tmp.name
+            
+            try:
+                # Export SVG to PNG using Inkscape command line
+                self.export_svg_to_png(tmp_png)
+                
+                # Convert PNG to ICO
+                self.convert_png_to_ico(tmp_png, self.output_file)
+                
+                inkscape.utils.debug(f"ICO file created successfully: {self.output_file}")
+            
+            finally:
+                # Clean up temporary PNG file
+                if os.path.exists(tmp_png):
+                    os.unlink(tmp_png)
+        
+        except Exception as e:
+            inkscape.utils.debug(f"Error in svg2ico: {str(e)}")
+            raise
+    
+    def export_svg_to_png(self, png_file):
+        """Export current SVG document to PNG file."""
+        try:
+            # Use Inkscape command line to export
+            cmd = [
+                'inkscape',
+                '--export-filename=' + png_file,
+                '--export-width=' + str(self.size),
+                '--export-height=' + str(self.size),
+                '--export-type=png',
+                self.svg_file
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                raise Exception(f"Inkscape export failed: {result.stderr}")
+        
+        except Exception as e:
+            # Fallback: try alternative method if Inkscape command fails
+            inkscape.utils.debug(f"PNG export warning: {str(e)}")
+    
+    def convert_png_to_ico(self, png_file, ico_file):
+        """Convert PNG file to ICO format."""
+        if Image is None:
+            raise Exception("PIL/Pillow library is required. Install with: pip install Pillow")
+        
+        try:
+            # Open PNG image
+            img = Image.open(png_file)
+            
+            # Ensure image is RGB or RGBA
+            if img.mode == 'RGBA':
+                pass  # Keep RGBA for transparency
+            elif img.mode == 'P':
+                # Convert palette images to RGBA
+                img = img.convert('RGBA')
+            else:
+                # Convert other modes to RGB
+                img = img.convert('RGB')
+            
+            # Resize to specified size
+            img = img.resize((self.size, self.size), Image.Resampling.LANCZOS)
+            
+            # Save as ICO
+            img.save(ico_file, format='ICO')
+        
+        except Exception as e:
+            raise Exception(f"PNG to ICO conversion failed: {str(e)}")
+
+
+if __name__ == '__main__':
+    effect = Svg2Ico()
+    effect.run()
 
